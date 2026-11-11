@@ -35,29 +35,50 @@ public static class Updater
     public static async Task<Release?> CheckAsync(CancellationToken ct = default)
     {
         using var http = NewClient(TimeSpan.FromSeconds(15));
-        using var resp = await http.GetAsync($"https://api.github.com/repos/{Repo}/releases/latest", ct);
-        if (resp.StatusCode == System.Net.HttpStatusCode.NotFound) return null; // aún no hay versiones publicadas
+        // Se revisan todas las versiones publicadas (también las marcadas como beta / pre-release,
+        // que «releases/latest» no devuelve) y se elige la más nueva que tenga un ejecutable de WinRaptor.
+        using var resp = await http.GetAsync($"https://api.github.com/repos/{Repo}/releases?per_page=20", ct);
+        if (resp.StatusCode == System.Net.HttpStatusCode.NotFound) return null; // repositorio no accesible o sin versiones
         resp.EnsureSuccessStatusCode();
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(ct));
-        var root = doc.RootElement;
 
-        var tag = root.GetProperty("tag_name").GetString() ?? "";
-        if (!TryParseVersion(tag, out var ver) || ver <= Normalize(Current)) return null;
-
-        foreach (var a in root.GetProperty("assets").EnumerateArray())
+        Release? best = null;
+        foreach (var root in doc.RootElement.EnumerateArray())
         {
-            if (!string.Equals(a.GetProperty("name").GetString(), AssetName, StringComparison.OrdinalIgnoreCase)) continue;
+            if (root.TryGetProperty("draft", out var dr) && dr.GetBoolean()) continue;
+            var tag = root.GetProperty("tag_name").GetString() ?? "";
+            if (!TryParseVersion(tag, out var ver) || ver <= Normalize(Current)) continue;
+            if (best is not null && ver <= best.Version) continue;
+            if (FindExe(root.GetProperty("assets")) is not { } a)
+            {
+                Log.Write($"Actualizaciones: la versión {tag} no incluye ningún WinRaptor*.exe.");
+                continue;
+            }
             string? sha = null;
             if (a.TryGetProperty("digest", out var d) && d.GetString() is { } dg && dg.StartsWith("sha256:"))
                 sha = dg["sha256:".Length..];
-            return new Release(ver, tag,
+            best = new Release(ver, tag,
                 root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "",
                 a.GetProperty("browser_download_url").GetString() ?? "",
                 a.GetProperty("size").GetInt64(), sha,
                 root.TryGetProperty("html_url", out var h) ? h.GetString() ?? "" : "");
         }
-        Log.Write($"Actualizaciones: la versión {tag} no incluye {AssetName}.");
-        return null;
+        return best;
+    }
+
+    /// <summary>El ejecutable adjunto: vale cualquier .exe que empiece por «WinRaptor»
+    /// (WinRaptor.exe, WinRaptor-V2.7.0.exe, WinRaptor Portable.exe…). Si hay varios, se prefiere WinRaptor.exe.</summary>
+    static JsonElement? FindExe(JsonElement assets)
+    {
+        JsonElement? found = null;
+        foreach (var a in assets.EnumerateArray())
+        {
+            var name = a.GetProperty("name").GetString() ?? "";
+            if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !name.StartsWith("WinRaptor", StringComparison.OrdinalIgnoreCase)) continue;
+            if (name.Equals(AssetName, StringComparison.OrdinalIgnoreCase)) return a;
+            found ??= a;
+        }
+        return found;
     }
 
     /// <summary>
