@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>WinRaptor</AssemblyName>
+    <RootNamespace>WinPulse</RootNamespace>
+    <Version>2.5.1</Version>
+    <Product>WinRaptor Optimizer</Product>
+    <AssemblyTitle>WinRaptor Optimizer</AssemblyTitle>
+    <Company>WinRaptor</Company>
+    <Description>WinRaptor Optimizer</Description>
+    <ApplicationIcon>WinRaptor.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="WinRaptor.ico" />
+    <Resource Include="logo.png" />
+    <Resource Include="mark.png" />
+    <Resource Include="mark-bold.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="tweaks.json" LogicalName="WinPulse.tweaks.json" />
+  </ItemGroup>
+
+</Project>
