@@ -1,0 +1,69 @@
+name: Publicar versión
+
+# Dos formas de publicar una versión nueva:
+#  1. Actions → «Publicar versión» → Run workflow → escribe la versión (por ejemplo 2.6.0).
+#  2. Crear y subir una etiqueta:  git tag v2.6.0  y  git push origin v2.6.0
+# En ambos casos se compila WinRaptor.exe en Windows y se crea la Release con el .exe adjunto.
+# La app instalada la detecta sola y se actualiza sin perder la configuración.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versión a publicar (por ejemplo 2.6.0)"
+        required: true
+      notes:
+        description: "Novedades (opcional; si lo dejas vacío se generan a partir de los commits)"
+        required: false
+      prerelease:
+        description: "Marcar como versión de prueba"
+        type: boolean
+        default: false
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Calcular versión
+        id: ver
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          $v = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { $env:INPUT_VERSION }
+          $v = $v.Trim().TrimStart('v','V')
+          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "Versión no válida: '$v'. Usa el formato 2.6.0" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          "tag=v$v"    >> $env:GITHUB_OUTPUT
+
+      - name: Compilar WinRaptor.exe (un solo archivo, sin necesidad de instalar .NET)
+        shell: pwsh
+        run: >
+          dotnet publish WinPulse.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none -p:Version=${{ steps.ver.outputs.version }}
+          -o out
+
+      - name: Crear la Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ github.event.inputs.notes }}
+          PRERELEASE: ${{ github.event.inputs.prerelease }}
+        run: |
+          $tag = "${{ steps.ver.outputs.tag }}"
+          $ghArgs = @($tag, "out/WinRaptor.exe", "--title", "WinRaptor $tag", "--target", "$env:GITHUB_SHA")
+          if ($env:NOTES) { $ghArgs += @("--notes", $env:NOTES) } else { $ghArgs += "--generate-notes" }
+          if ($env:PRERELEASE -eq 'true') { $ghArgs += "--prerelease" }
+          gh release create @ghArgs

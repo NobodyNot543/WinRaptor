@@ -15,6 +15,8 @@ public partial class App : Application
             MessageBox.Show(args.Exception.Message, "WinRaptor", MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
         };
+        // Tras una actualización queda el ejecutable anterior como .old: se borra en segundo plano.
+        Task.Run(Updater.CleanupOld);
         base.OnStartup(e);
     }
 }
