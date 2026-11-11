@@ -31,6 +31,7 @@
 - [Funciones](#funciones)
 - [Seguridad: cómo protege tu equipo](#seguridad-cómo-protege-tu-equipo)
 - [Requisitos](#requisitos)
+- [Antes de abrirlo: desactivar Control inteligente de aplicaciones](#antes-de-abrirlo-desactivar-control-inteligente-de-aplicaciones)
 - [Compilar y ejecutar](#compilar-y-ejecutar)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Añadir un ajuste](#añadir-un-ajuste)
@@ -58,7 +59,7 @@ A diferencia de otros optimizadores:
 |---|---|
 | ✅ **Estable** | Aplicar y deshacer ajustes, historial de cambios, perfiles, análisis, drivers, modo juego. |
 | 🧪 **En pruebas** | Comportamiento en otros equipos (otras gráficas, portátiles, sobremesa), en Windows en otros idiomas y en Windows 10. |
-| ⚠️ **Limitaciones conocidas** | El ejecutable **no está firmado**: SmartScreen avisará y *Control inteligente de aplicaciones* lo bloquea. La interfaz solo está en **español**. No hay versión para **ARM**. Necesita **permisos de administrador**. |
+| ⚠️ **Limitaciones conocidas** | El ejecutable **no está firmado**: SmartScreen avisará y *Control inteligente de aplicaciones* lo bloquea ([cómo desactivarlo](#antes-de-abrirlo-desactivar-control-inteligente-de-aplicaciones)). La interfaz solo está en **español**. No hay versión para **ARM**. Necesita **permisos de administrador**. |
 | 🔁 **Puede cambiar** | Nombres de secciones, diseño y algunos textos entre versiones. Los datos guardados (historial, copias de seguridad) se conservan. |
 
 Si encuentras un fallo, la sección **Actividad** de la app y el archivo `winpulse.log` (ver [Dónde guarda sus datos](#dónde-guarda-sus-datos)) cuentan qué pasó.
@@ -119,6 +120,34 @@ Si encuentras un fallo, la sección **Actividad** de la app y el archivo `winpul
 | Runtime | [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/9.0), salvo en la versión autocontenida |
 | Para compilar | [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) |
 
+## Antes de abrirlo: desactivar Control inteligente de aplicaciones
+
+> [!IMPORTANT]
+> **Es necesario desactivar el *Control inteligente de aplicaciones* (Smart App Control) de Windows 11 para poder usar WinRaptor.**
+> Como el ejecutable todavía **no tiene firma digital**, esta protección lo bloquea sin dar opción a abrirlo
+> (aparece un aviso de que *«Control inteligente de aplicaciones bloqueó una aplicación que puede no ser segura»*).
+> Windows 10 no tiene esta función, así que ahí no hace falta hacer nada.
+
+### Cómo desactivarlo
+
+1. Abre **Inicio**, escribe **Seguridad de Windows** y ábrela.
+2. Entra en **Control de aplicaciones y navegador**.
+3. Pulsa **Configuración de Control inteligente de aplicaciones**.
+4. Elige **Desactivado** y confirma en la ventana de Control de cuentas de usuario.
+5. Vuelve a abrir `WinRaptor.exe`.
+
+> [!WARNING]
+> En muchas versiones de Windows 11, **una vez desactivado ya no se puede volver a activar sin reinstalar o restablecer Windows**.
+> En las versiones más recientes Microsoft permite reactivarlo desde la misma pantalla. Tenlo en cuenta antes de desactivarlo.
+> Tu equipo sigue protegido por el antivirus de Microsoft Defender y por SmartScreen.
+
+### Si aparece SmartScreen («Windows protegió tu PC»)
+
+Es un aviso distinto y no bloquea del todo: pulsa **Más información** y después **Ejecutar de todas formas**.
+
+Si descargaste el programa en un `.zip`, también puedes evitar avisos haciendo clic derecho en el archivo descargado →
+**Propiedades** → marcar **Desbloquear** → **Aceptar**, antes de descomprimirlo.
+
 ## Compilar y ejecutar
 
 ```powershell
@@ -133,7 +162,8 @@ dotnet publish WinPulse.csproj -c Release -r win-x64 --self-contained true -o pu
 ```
 
 > [!NOTE]
-> En equipos con **Control inteligente de aplicaciones** activado, un ejecutable sin firma digital puede bloquearse.
+> En equipos con **Control inteligente de aplicaciones** activado, el ejecutable compilado se bloqueará porque no tiene firma digital.
+> Desactívalo como se explica en [Antes de abrirlo](#antes-de-abrirlo-desactivar-control-inteligente-de-aplicaciones).
 > La solución definitiva es firmar el ejecutable con un certificado de firma de código.
 
 ## Estructura del proyecto
