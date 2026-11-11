@@ -127,9 +127,79 @@ public partial class MainWindow : Window
             if (_game?.Active == true) ShowToast("El modo juego seguía activo. Entra en «Modo juego» y pulsa «Terminar y restaurar» para dejar tu PC como estaba.");
             System.Windows.Input.Keyboard.ClearFocus();
             HomePanel.ScrollToTop();
+            _ = CheckForUpdatesAsync(manual: false);
             int act = _all.Count(v => v.IsApplied);
             _ = Task.Run(() => { try { Snapshots.TakeIfOlder(TimeSpan.FromHours(6), "Al abrir WinRaptor", act); } catch (Exception ex) { Log.Write("Medición automática: " + ex.Message); } });
         };
+    }
+
+    // ---------- Actualizaciones ----------
+    Updater.Release? _update;
+    bool _updating;
+
+    async Task CheckForUpdatesAsync(bool manual)
+    {
+        if (_updating) return;
+        try
+        {
+            if (manual) ShowToast("Buscando actualizaciones…");
+            _update = await Updater.CheckAsync();
+            if (_update is null)
+            {
+                UpdateChip.Visibility = Visibility.Collapsed;
+                if (manual) ShowToast($"Ya tienes la última versión (v{Updater.Current.ToString(3)}).");
+                return;
+            }
+            UpdateChipText.Text = $"Actualizar a v{_update.Version.ToString(3)}";
+            UpdateChip.Visibility = Visibility.Visible;
+            Log.Write($"Hay una versión nueva: {_update.Tag}.");
+            if (manual) UpdateChip_Click(UpdateChip, null!);
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Actualizaciones: " + ex.Message);
+            if (manual) ShowToast("No se pudo comprobar si hay actualizaciones. Revisa tu conexión.");
+        }
+    }
+
+    async void VersionText_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => await CheckForUpdatesAsync(manual: true);
+
+    async void UpdateChip_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (_update is not { } r || _updating) return;
+        if (_game?.Active == true)
+        {
+            ShowToast("Termina el modo juego antes de actualizar, para que tu PC quede como estaba.");
+            return;
+        }
+        var notes = r.Notes.Trim();
+        if (notes.Length > 900) notes = notes[..900] + "…";
+        var msg = $"Hay una versión nueva de WinRaptor: v{r.Version.ToString(3)} (tienes v{Updater.Current.ToString(3)}).\n\n" +
+                  (notes.Length > 0 ? "Novedades:\n" + notes + "\n\n" : "") +
+                  "Se descargará e instalará ahora y WinRaptor se volverá a abrir.\n" +
+                  "Tus ajustes aplicados, historial, perfiles y preferencias se conservan.\n\n¿Actualizar?";
+        if (MessageBox.Show(this, msg, "Actualizar WinRaptor", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+
+        _updating = true;
+        UpdateChip.IsEnabled = false;
+        try
+        {
+            var progress = new Progress<double>(p => UpdateChipText.Text = $"Descargando… {p:P0}");
+            await Updater.InstallAsync(r, progress);
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            Log.Write("Error al actualizar: " + ex.Message);
+            UpdateChipText.Text = $"Actualizar a v{r.Version.ToString(3)}";
+            MessageBox.Show(this, "No se pudo actualizar:\n" + ex.Message + "\n\nTu versión actual sigue intacta.", "WinRaptor",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _updating = false;
+            UpdateChip.IsEnabled = true;
+        }
     }
 
     static string GroupOf(string key) => key switch

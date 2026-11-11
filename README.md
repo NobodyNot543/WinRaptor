@@ -10,7 +10,7 @@
 
 <p align="center">
   <img alt="Estado: beta" src="https://img.shields.io/badge/estado-beta-f59e0b?style=for-the-badge">
-  <img alt="Versión 2.5.1" src="https://img.shields.io/badge/versi%C3%B3n-2.5.1-8b5cf6?style=for-the-badge">
+  <img alt="Versión 2.6.0" src="https://img.shields.io/badge/versi%C3%B3n-2.6.0-8b5cf6?style=for-the-badge">
   <img alt="Windows 10 y 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0ea5e9?style=for-the-badge&logo=windows&logoColor=white">
   <img alt=".NET 9" src="https://img.shields.io/badge/.NET-9-512bd4?style=for-the-badge&logo=dotnet&logoColor=white">
   <img alt="WPF" src="https://img.shields.io/badge/UI-WPF-06b6d4?style=for-the-badge">
@@ -24,15 +24,24 @@
 > Todos los ajustes guardan su valor original y se pueden deshacer, y antes de aplicar cambios crea un punto de restauración,
 > pero **úsalo bajo tu responsabilidad** y lee la vista previa antes de aplicar nada.
 
+## Descargar
+
+Descarga **`WinRaptor.exe`** de la [última versión](https://github.com/NobodyNot543/WinRaptor/releases/latest).
+Es un único archivo que funciona en cualquier Windows 10/11 x64 sin instalar nada más.
+Antes de abrirlo en Windows 11, lee [cómo desactivar Control inteligente de aplicaciones](#antes-de-abrirlo-desactivar-control-inteligente-de-aplicaciones).
+
 ## Índice
 
+- [Descargar](#descargar)
 - [Qué es](#qué-es)
 - [Qué significa que sea beta](#qué-significa-que-sea-beta)
 - [Funciones](#funciones)
 - [Seguridad: cómo protege tu equipo](#seguridad-cómo-protege-tu-equipo)
 - [Requisitos](#requisitos)
 - [Antes de abrirlo: desactivar Control inteligente de aplicaciones](#antes-de-abrirlo-desactivar-control-inteligente-de-aplicaciones)
+- [Actualizaciones](#actualizaciones)
 - [Compilar y ejecutar](#compilar-y-ejecutar)
+- [Publicar una versión nueva](#publicar-una-versión-nueva)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Añadir un ajuste](#añadir-un-ajuste)
 - [Dónde guarda sus datos](#dónde-guarda-sus-datos)
@@ -109,7 +118,7 @@ Si encuentras un fallo, la sección **Actividad** de la app y el archivo `winpul
 - **Vista previa obligatoria** de los cambios y aviso de lo que puede dejar de funcionar.
 - **Listas cerradas**: solo se pueden quitar apps de un catálogo revisado y solo se cierran procesos conocidos en el modo juego.
 - **Cambios de pantalla reversibles**: si no confirmas la nueva frecuencia en 15 s, vuelve sola a la anterior.
-- **Sin telemetría**: WinRaptor no envía datos a ningún servidor. Solo se conecta para medir la red, consultar Windows Update y descargar portadas de juegos que no estén en tu PC.
+- **Sin telemetría**: WinRaptor no envía datos a ningún servidor. Solo se conecta para medir la red, consultar Windows Update, descargar portadas de juegos que no estén en tu PC y buscar versiones nuevas de WinRaptor en GitHub.
 
 ## Requisitos
 
@@ -148,6 +157,23 @@ Es un aviso distinto y no bloquea del todo: pulsa **Más información** y despu�
 Si descargaste el programa en un `.zip`, también puedes evitar avisos haciendo clic derecho en el archivo descargado →
 **Propiedades** → marcar **Desbloquear** → **Aceptar**, antes de descomprimirlo.
 
+## Actualizaciones
+
+WinRaptor se actualiza desde la propia app, **sin volver a descargarlo y sin perder tu configuración**:
+
+1. Al abrirse, comprueba si hay una versión nueva en las [Releases](https://github.com/NobodyNot543/WinRaptor/releases).
+   También puedes comprobarlo cuando quieras pulsando el número de versión, debajo de tu nombre en el menú.
+2. Si la hay, aparece el botón **Actualizar a vX.Y.Z**. Al pulsarlo muestra las novedades y pide confirmación.
+3. Descarga el nuevo `WinRaptor.exe`, comprueba que esté completo (tamaño y huella SHA-256), lo pone en lugar del actual y se vuelve a abrir.
+
+Solo se sustituye el ejecutable. Tus ajustes aplicados, el historial, los perfiles y las preferencias están en
+`%LOCALAPPDATA%\WinPulse` (ver [Dónde guarda sus datos](#dónde-guarda-sus-datos)) y no se tocan.
+Si algo falla durante la actualización, la versión que tenías queda intacta.
+Mientras el modo juego está activo no se puede actualizar, para que el equipo quede antes como estaba.
+
+> [!NOTE]
+> La actualización automática está disponible a partir de la versión 2.6.0. Si tienes una anterior, descarga la 2.6.0 una vez a mano.
+
 ## Compilar y ejecutar
 
 ```powershell
@@ -166,6 +192,24 @@ dotnet publish WinPulse.csproj -c Release -r win-x64 --self-contained true -o pu
 > Desactívalo como se explica en [Antes de abrirlo](#antes-de-abrirlo-desactivar-control-inteligente-de-aplicaciones).
 > La solución definitiva es firmar el ejecutable con un certificado de firma de código.
 
+## Publicar una versión nueva
+
+Las versiones se compilan y publican solas con GitHub Actions (`.github/workflows/release.yml`):
+
+1. En GitHub, entra en **Actions** → **Publicar versión** → **Run workflow**.
+2. Escribe la versión (por ejemplo `2.6.1`; tiene que ser mayor que la anterior), y si quieres las novedades.
+3. Pulsa **Run workflow**. En unos minutos aparece la Release con `WinRaptor.exe` adjunto.
+
+También se puede publicar subiendo una etiqueta:
+
+```powershell
+git tag v2.6.1
+git push origin v2.6.1
+```
+
+Las apps instaladas verán la versión nueva la próxima vez que se abran.
+Si subes una Release a mano, el archivo adjunto debe llamarse exactamente **`WinRaptor.exe`** y la etiqueta debe tener el formato `v2.6.1`.
+
 ## Estructura del proyecto
 
 | Archivo | Contenido |
@@ -181,6 +225,7 @@ dotnet publish WinPulse.csproj -c Release -r win-x64 --self-contained true -o pu
 | `Advisor.cs` | Consejos y nota de salud del PC. |
 | `Apps.cs` | Catálogo de apps que se pueden quitar y lista de protegidas. |
 | `Preview.cs` | Vista previa de cambios con valores actuales. |
+| `Updater.cs` | Busca versiones nuevas en GitHub y actualiza el ejecutable sin tocar los datos. |
 | `Features.cs`, `SystemTools.cs`, `BeforeAfter.cs`, `Settings.cs`, `UserInfo.cs` | Diagnóstico, herramientas, mediciones, preferencias y datos del usuario. |
 | `Charts.cs` / `Motion.cs` | Gráficas propias y animaciones. |
 | `WinRaptor.ico`, `logo.png`, `mark.png`, `mark-bold.png` | Icono y logotipos. |
@@ -236,10 +281,10 @@ Todo queda en `%LOCALAPPDATA%\WinPulse` (la carpeta conserva el nombre original 
 ## Hoja de ruta
 
 - [ ] Firma digital del ejecutable (sin avisos de SmartScreen ni bloqueos).
-- [ ] Versión portable autocontenida en `.zip`.
+- [x] Versión autocontenida de un solo archivo en las Releases.
 - [ ] Interfaz en inglés.
 - [ ] Pruebas en más configuraciones (NVIDIA, Intel, sobremesa, Windows 10).
-- [ ] Comprobación de actualizaciones desde la propia app.
+- [x] Actualización desde la propia app sin perder la configuración.
 - [ ] Detección de juegos de Battle.net, EA App, Ubisoft Connect y GOG.
 
 ## Aviso legal

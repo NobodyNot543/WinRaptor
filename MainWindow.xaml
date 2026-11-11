@@ -109,7 +109,15 @@
                                 </StackPanel>
                             </DockPanel>
                         </Border>
-                        <TextBlock x:Name="VersionText" Foreground="#4B5568" FontSize="10.5" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock x:Name="VersionText" Foreground="#4B5568" FontSize="10.5" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                   Cursor="Hand" ToolTip="Pulsa para buscar actualizaciones" MouseLeftButtonUp="VersionText_Click"/>
+                        <Border x:Name="UpdateChip" Visibility="Collapsed" Background="#2A2350" CornerRadius="7" Padding="10,5" Margin="0,8,0,0"
+                                HorizontalAlignment="Center" Cursor="Hand" MouseLeftButtonUp="UpdateChip_Click" ToolTip="Instalar la nueva versión sin perder tus ajustes">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE896;" FontFamily="{StaticResource Icons}" FontSize="11" Foreground="#C4B5FD" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="UpdateChipText" FontSize="10.5" FontWeight="Bold" Foreground="#C4B5FD" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
